@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>pasien-perfusion-monitor</title>
+
+<style>
+
+.background {
+background-image: url('background.jpg');
+background-size: 100% 100%;
+background-repeat: no-repeat;
+background-position: center;
+width: 100vw;
+height: 100vh;
+position: relative;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+}
+
+.tombol-kembali {
+position: absolute;
+top: 20px;
+left: 20px;
+background-color: #7f8c8d;
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 4px;
+cursor: pointer;
+font-size: 14px;
+font-weight: bold;
+z-index: 10;
+}
+
+.tombol-kembali a {
+color: white;
+text-decoration: none;
+}
+
+.status-badge {
+font-family: 'Arial', sans-serif;
+width: 380px;
+padding: 25px 0;
+border-radius: 50px;
+color: white;
+font-size: 30px;
+font-weight: bold;
+border: none;
+text-align: center;
+box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+    
+.bg-warning { background-color: #f39c12; }
+.bg-normal  { background-color: #21bfa2; }
+.bg-danger  { background-color: #e74c3c; }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="background">
+
+<button class="tombol-kembali">
+<a href="home.html">KEMBALI</a>
+</button>
+
+<button id="kotak-status" class="status-badge bg-warning">
+Menentukan Baseline...
+</button>
+
+<p style="color: black; font-family: Arial; margin-top: 20px; font-size: 30px; font-weight: bold;">
+Deviasi: <span id="angkaDeviasi">0%</span>
+</p>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+
+const firebaseConfig = {
+databaseURL: "https://opsi-2026-30956-default-rtdb.asia-southeast1.firebasedatabase.app/"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+let kumpulanData = []; 
+let nilaiBaseline = 0;
+let Baselineditentukan = false;
+
+database.ref('amplitudo_sensor').on('value', (snapshot) => {
+let dataMasuk = snapshot.val();
+if (dataMasuk !== null && dataMasuk !== "") {
+let amplitudoBaru = parseFloat(dataMasuk);
+if (!isNaN(amplitudoBaru)) {
+terimaDataESP(amplitudoBaru);
+}
+}
+});
+
+function terimaDataESP(amplitudoBaru) {
+let elemenTombol = document.getElementById("kotak-status");
+let elemenTeksDeviasi = document.getElementById("angkaDeviasi");
+
+if (Baselineditentukan == false) {
+kumpulanData.push(amplitudoBaru);
+if (kumpulanData.length >= 5) { 
+let total = 0;
+for(let i = 0; i < kumpulanData.length; i++) {
+total += kumpulanData[i];
+}
+nilaiBaseline = total / kumpulanData.length;
+Baselineditentukan = true; 
+elemenTombol.innerText = "STATUS: AMAN/NORMAL";
+elemenTombol.className = "status-badge bg-normal";
+}
+} else {
+let deviasi = Math.abs((nilaiBaseline - amplitudoBaru) / nilaiBaseline) * 100;
+elemenTeksDeviasi.innerText = deviasi.toFixed(0) + "%";
+if (deviasi > 10) {
+elemenTombol.innerText = "BAHAYA (DEVIASI TINGGI)";
+elemenTombol.className = "status-badge bg-danger";
+} else {
+elemenTombol.innerText = "STATUS: AMAN/NORMAL";
+elemenTombol.className = "status-badge bg-normal";
+}
+}
+}
+</script>
+</body>
+</html>
