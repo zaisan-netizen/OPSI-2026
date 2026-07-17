@@ -7,7 +7,7 @@
 <style>
 .background {
 background-image: url('background.jpg');
-background-size: 100% 100%;
+background-size: cover; /* SOLUSI: Background tidak akan gepeng/distorsi */
 background-repeat: no-repeat;
 background-position: center;
 width: 100vw;
@@ -18,45 +18,57 @@ flex-direction: column;
 justify-content: center;
 align-items: center;
 font-family: 'Arial', sans-serif;
+padding: 20px; /* Mencegah konten menyentuh ujung layar saat di HP */
+box-sizing: border-box;
 }
+
+/* Menggunakan max-width agar tombol bisa mengecil secara otomatis di layar kecil */
 .tombol-pasien {
 font-family: 'arial', sans-serif;
-width: 300px;
-padding: 20px 0;
+width: 100%;
+max-width: 320px; 
+padding: 16px 0;
 border-radius: 50px;
 background-color: #21bfa2;
 color: white;
-font-size: 28px;
+font-size: 24px; /* Ukuran font disesuaikan agar lebih proporsional */
 font-weight: bold;
 border: none;
 cursor: pointer;
 box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 text-align: center;
 margin-bottom: 20px;
+line-height: 1.2;
 }
+
 .tombol-tenagamedis {
 font-family: 'arial', sans-serif;
-width: 300px;
-padding: 20px 0;
+width: 100%;
+max-width: 320px;
+padding: 16px 0;
 border-radius: 50px;
 background-color: red;
 color: white;
-font-size: 28px;
+font-size: 24px;
 font-weight: bold;
 border: none;
 cursor: pointer;
 box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 text-align: center;
 margin-bottom: 20px;
+line-height: 1.2;
 }
+
 .box-form {
 background: white;
 padding: 30px;
 border-radius: 20px;
 box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-width: 300px;
+width: 100%;
+max-width: 320px; /* Form akan mengecil otomatis mengikuti lebar HP */
 box-sizing: border-box;
 }
+
 .box-form h2 {
 font-size: 22px;
 color: #2c3e50;
@@ -64,6 +76,7 @@ margin-top: 0;
 margin-bottom: 20px;
 text-align: center;
 }
+
 .box-form label {
 font-size: 14px;
 color: #7f8c8d;
@@ -71,6 +84,7 @@ font-weight: bold;
 display: block;
 margin-top: 10px;
 }
+
 .box-form input, .box-form select {
 width: 100%;
 padding: 10px;
@@ -81,6 +95,7 @@ border-radius: 8px;
 box-sizing: border-box;
 font-size: 14px;
 }
+
 .btn-submit {
 width: 100%;
 padding: 12px;
@@ -93,6 +108,7 @@ cursor: pointer;
 font-size: 16px;
 margin-bottom: 10px;
 }
+
 .btn-batal {
 width: 100%;
 padding: 12px;
@@ -104,26 +120,33 @@ border-radius: 25px;
 cursor: pointer;
 font-size: 16px;
 }
-@media screen and (max-width: 1024px) {
+
+/* --- ATURAN KHUSUS UNTUK LAYAR HP (DI BAWAH 480PX) --- */
+@media screen and (max-width: 480px) {
 .background {
 height: auto !important;
-min-height: 100vh;
-padding: 20px 5% !important;
-overflow-x: hidden;
+min-height: 100vh; /* Agar jika konten memanjang ke bawah tetap aman */
+padding: 40px 20px;
 }
+.tombol-pasien, .tombol-tenagamedis {
+font-size: 20px; /* Ukuran teks tombol mengecil di layar HP */
+padding: 12px 10px;
+}
+.box-form {
+padding: 20px; /* Mengurangi padding dalam form agar muat di HP kecil */
+}
+.box-form h2 {
+font-size: 18px;
+}
+}
+
+/* Media query bawaan Anda untuk tablet/desktop kecil */
+@media screen and (max-width: 1024px) {
 div[style*="display: flex; gap: 20px"] {
 flex-wrap: wrap !important;
 }
 div[style*="flex: 1;"] {
 flex: 1 1 100% !important;
-}
-.status-badge, .tombol-pasien, .tombol-tenagamedis, .box-form, select.pilih-relawan {
-width: 100% !important;
-max-width: 350px !important;
-}
-p {
-width: 100% !important;
-font-size: 22px !important;
 }
 table {
 display: block !important;
@@ -144,14 +167,15 @@ align-self: center;
 </head>
 <body>
 <div class="background">
-<div id="menuUtama" style="display: flex; flex-direction: column; align-items: center;">
-<div class="tombol-1">
+<div id="menuUtama" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+<div class="tombol-1" style="width: 100%; display: flex; justify-content: center;">
 <button class="tombol-pasien" onclick="bukaForm('pasien')">Log In As A<br>Patient</button>
 </div>
-<div class="tombol-2">
+<div class="tombol-2" style="width: 100%; display: flex; justify-content: center;">
 <button class="tombol-tenagamedis" onclick="bukaForm('medis')">Log In As A<br>Healthcare Worker</button>
 </div>
 </div>
+
 <div class="box-form" id="formPasien" style="display: none;">
 <h2>Patient Identity</h2>
 <label>Select Relawan ID:</label>
@@ -182,6 +206,7 @@ align-self: center;
 <button class="btn-submit" onclick="prosesPasien()">SUBMIT</button>
 <button class="btn-batal" onclick="kembali()">CANCEL</button>
 </div>
+
 <div class="box-form" id="formMedis" style="display: none;">
 <h2>Healthcare Login</h2>
 <label>Password:</label>
@@ -190,6 +215,7 @@ align-self: center;
 <button class="btn-batal" onclick="kembali()">CANCEL</button>
 </div>
 </div>
+
 <script>
 function bukaForm(tipe) {
 document.getElementById('menuUtama').style.display = 'none';
