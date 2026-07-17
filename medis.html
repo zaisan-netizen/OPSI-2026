@@ -98,6 +98,42 @@ margin-bottom: 20px;
 align-self: center;
 }
 }
+
+/* ==========================================================================
+   KODE TAMBAHAN OTOMATIS AGAR TIDAK BERANTAKAN DI PERANGKAT LAIN 
+   (Tanpa mengubah atau menghapus kode asli Anda di atas)
+   ========================================================================== */
+
+/* 1. Perbaikan Kunci Latar Belakang & Tinggi Dinamis pada Laptop/Desktop */
+.background {
+  background-image: url('background.jpg?v=1') !important; /* Cache busting gambar */
+  background-size: cover !important;                     /* Gambar proporsional tidak gepeng */
+  background-attachment: fixed !important;               /* Dikunci agar tidak nge-zoom saat di-scroll */
+  height: auto !important;                               /* Mengikuti panjang data tabel */
+  min-height: 100vh !important;
+  padding-bottom: 50px !important;                       /* Jarak aman di bagian bawah */
+}
+
+/* 2. Menstabilkan Grafik Agar Tidak Merosot ke Bawah */
+div[style*="display: flex; gap: 20px"] > div {
+  height: 340px !important;  /* Mengunci tinggi kotak putih pembungkus grafik */
+  min-width: 0 !important;   /* Mencegah konflik flexbox yang merusak aspek rasio grafik */
+}
+
+/* 3. Penyesuaian Responsif Tambahan Khusus Layar HP/Tablet */
+@media screen and (max-width: 1024px) {
+  .background {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+  /* Mengubah layout kotak grafik menjadi atas-bawah saat dibuka di HP */
+  div[style*="display: flex; gap: 20px"] {
+    flex-direction: column !important;
+  }
+  div[style*="display: flex; gap: 20px"] > div {
+    height: 280px !important; /* Sesuaikan tinggi grafik agar pas di layar HP */
+  }
+}
 </style>
 </head>
 <body>
@@ -198,6 +234,7 @@ grafikDeviasi.data.labels = [];
 grafikDeviasi.data.datasets[0].data = [];
 grafikDeviasi.update();
 }
+let listenerAktif = null;
 function hubungkanKeFirebase(idRelawan) {
 if (listenerAktif) {
 database.ref('relawan/' + listenerAktif + '/amplitudo_sensor').off();
