@@ -1,109 +1,289 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-<title>medis-dashboard-monitor</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>medis-perfusion-monitor</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-
 .background {
 background-image: url('background.jpg');
 background-size: 100% 100%;
 background-repeat: no-repeat;
 background-position: center;
 width: 100vw;
-height: 100vh;
+height: 130vh;
 position: relative;
 display: flex;
 flex-direction: column;
+padding-left: 40px;
+padding-right: 40px;
+box-sizing: border-box;
 }
-
-.judul-halaman {
+h1, h2, h3, h4 {
+font-size: 24px;
 color: #2c3e50;
-margin-bottom: 20px;
-font-size: 28px;
-font-weight: bold;
+margin: 10px 0;
+font-family: 'Arial', sans-serif;
 }
-
-.tabel-pasien {
+table {
 width: 100%;
 border-collapse: collapse;
+margin-top: 30px;
+text-align: center;
 background-color: white;
-box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-border-radius: 8px;
-overflow: hidden;
+font-family: 'Arial', sans-serif;
 }
-
-.tabel-pasien th, .tabel-pasien td {
-padding: 15px;
-text-align: left;
-border-bottom: 1px solid #eeeeee;
-}
-
-.tabel-pasien th {
-background-color: #34495e;
-color: white;
+th {
+background-color: #e2e8f0;
+padding: 12px;
 font-weight: bold;
+border: 1px solid #cbd5e1;
 }
-
-.badge {
-padding: 6px 12px;
-border-radius: 20px;
+td {
+padding: 10px;
+border: 1px solid #e2e8f0;
+}
+.tombol-kembali {
+position: absolute;
+top: 20px;
+right: 50px;
+background-color: #7f8c8d;
 color: white;
-font-weight: bold;
+border: none;
+padding: 8px 16px;
+border-radius: 4px;
+cursor: pointer;
 font-size: 14px;
+font-weight: bold;
+z-index: 10;
 }
-
-.badge-normal { background-color: #21bfa2; }
-.badge-danger { background-color: #e74c3c; }
-
+.tombol-kembali a {
+color: white;
+text-decoration: none;
+}
+@media screen and (max-width: 1024px) {
+.background {
+height: auto !important;
+min-height: 100vh;
+padding: 20px 5% !important;
+overflow-x: hidden;
+}
+div[style*="display: flex; gap: 20px"] {
+flex-wrap: wrap !important;
+}
+div[style*="flex: 1;"] {
+flex: 1 1 100% !important;
+}
+.status-badge, .tombol-pasien, .tombol-tenagamedis, .box-form, select.pilih-relawan {
+width: 100% !important;
+max-width: 350px !important;
+}
+p {
+width: 100% !important;
+font-size: 22px !important;
+}
+table {
+display: block !important;
+overflow-x: auto !important;
+white-space: nowrap !important;
+width: 100% !important;
+}
+.tombol-kembali, .btn-keluar {
+position: relative;
+top: 0;
+left: 0;
+margin-top: 10px;
+margin-bottom: 20px;
+align-self: center;
+}
+}
 </style>
-
 </head>
-
 <body>
-
 <div class="background">
-
-<div class="judul-halaman">DASHBOARD PEMANTAUAN NAKES</div>
-
-<table class="tabel-pasien">
+<button class="tombol-kembali" onclick="logout()">KEMBALI</button>
+<h1>HALAMAN PASIEN</h1>
+<h2>ID ANDA : <span id="identitasRelawan">-</span></h2>
+<h2>BASELINE : <span id="medisBaseline">-</span></h2>
+<h3>STATUS : <span id="medisStatus">KALIBRASI</span></h3>
+<h4>DEVIASI : <span id="medisDeviasi">0%</span></h4>
+<table>
 <thead>
 <tr>
-<th>No Kamar</th>
-<th>Nama Pasien</th>
-<th>Amplitudo Sensor</th>
-<th>Deviasi</th>
-<th>Status</th>
+<th>NO</th>
+<th>AMPLITUDO / 5 S</th>
+<th>DEVIASI</th>
+<th>TIMESTAMP</th>
+<th>KONDISI</th>
 </tr>
 </thead>
-<tbody>
-<tr>
-<td>Kamar 101</td>
-<td>Tn. Ahmad Kusuma</td>
-<td id="nakesAmplitudo">Waiting...</td>
-<td id="nakesDeviasi">0%</td>
-<td><span id="nakesStatus" class="badge badge-normal">MENUNGGU DATA</span></td>
-</tr>
+<tbody id="TabelData">
 </tbody>
 </table>
-
+<div style="display: flex; gap: 20px; margin-top: 30px; font-family: 'Arial', sans-serif;">
+<div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+<h3 style="text-align: center; margin-top: 0; color: #2c3e50;">Grafik Amplitudo</h3>
+<canvas id="grafikMedis"></canvas>
 </div>
-
+<div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+<h3 style="text-align: center; margin-top: 0; color: #2c3e50;">Grafik Deviasi (%)</h3>
+<canvas id="grafikDeviasi"></canvas>
+</div>
+</div>
+</div>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
 <script>
 const firebaseConfig = {
 databaseURL: "https://opsi-2026-30956-default-rtdb.asia-southeast1.firebasedatabase.app/"
 };
-
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
-
-// Di sini nanti kita akan hubungkan logika pembacaan baseline & deviasi yang sama persis
-// Agar data di halaman pasien dan halaman nakes sinkron secara real-time!
+let kumpulanData = [];
+let nilaiBaseline = 0;
+let baselineSudahTerkunci = false;
+let nomorUrut = 1;
+const urlParams = new URLSearchParams(window.location.search);
+let idRelawan = urlParams.get('id');
+if (!idRelawan) {
+idRelawan = "R01";
+}
+document.getElementById('identitasRelawan').innerText = idRelawan;
+const ctxAmp = document.getElementById('grafikMedis').getContext('2d');
+const grafikSaya = new Chart(ctxAmp, {
+type: 'line',
+data: {
+labels: [],
+datasets: [{
+label: 'Tren Amplitudo',
+data: [],
+borderColor: '#3498db',
+backgroundColor: 'rgba(52, 152, 219, 0.1)',
+borderWidth: 2,
+tension: 0.3
+}]
+},
+options: { scales: { y: { beginAtZero: true } } }
+});
+const ctxDev = document.getElementById('grafikDeviasi').getContext('2d');
+const grafikDeviasi = new Chart(ctxDev, {
+type: 'line',
+data: {
+labels: [],
+datasets: [{
+label: 'Tren Deviasi (%)',
+data: [],
+borderColor: '#e74c3c',
+backgroundColor: 'rgba(231, 76, 60, 0.1)',
+borderWidth: 2,
+tension: 0.3
+}]
+},
+options: { scales: { y: { beginAtZero: true } } }
+});
+function resetTampilan() {
+kumpulanData = [];
+nilaiBaseline = 0;
+baselineSudahTerkunci = false;
+nomorUrut = 1;
+document.getElementById("medisBaseline").innerText = "-";
+document.getElementById("medisStatus").innerText = "KALIBRASI";
+document.getElementById("medisDeviasi").innerText = "0%";
+document.getElementById("TabelData").innerHTML = "";
+grafikSaya.data.labels = [];
+grafikSaya.data.datasets[0].data = [];
+grafikSaya.update();
+grafikDeviasi.data.labels = [];
+grafikDeviasi.data.datasets[0].data = [];
+grafikDeviasi.update();
+}
+function hubungkanKeFirebase(idRelawan) {
+if (listenerAktif) {
+database.ref('relawan/' + listenerAktif + '/amplitudo_sensor').off();
+}
+listenerAktif = idRelawan;
+document.getElementById('identitasRelawan').innerText = idRelawan;
+database.ref('relawan/' + idRelawan + '/amplitudo_sensor').on('value', (snapshot) => {
+let dataMasuk = snapshot.val();
+console.log("Data " + idRelawan + ": ", dataMasuk);
+if (dataMasuk !== null && dataMasuk !== "") {
+let amplitudoBaru = parseFloat(dataMasuk);
+if (!isNaN(amplitudoBaru)) {
+prosesDataMedis(amplitudoBaru);
+}
+}
+});
+}
+function gantiPantauanRelawan() {
+let idTerpilih = document.getElementById("pilihRelawanMedis").value;
+resetTampilan();
+hubungkanKeFirebase(idTerpilih);
+}
+function prosesDataMedis(amp) {
+let elBaseline = document.getElementById("medisBaseline");
+let elStatus = document.getElementById("medisStatus");
+let elDeviasi = document.getElementById("medisDeviasi");
+let targetTabel = document.getElementById("TabelData");
+let waktuSekarang = new Date().toLocaleTimeString();
+let deviasiTeks = "-";
+let kondisiText = "KALIBRASI";
+if (baselineSudahTerkunci == false) {
+kumpulanData.push(amp);
+if (kumpulanData.length >= 5) {
+let total = 0;
+for(let i = 0; i < kumpulanData.length; i++) {
+total += kumpulanData[i];
+}
+nilaiBaseline = total / kumpulanData.length;
+baselineSudahTerkunci = true;
+elBaseline.innerText = nilaiBaseline.toFixed(2);
+elStatus.innerText = "AMAN / NORMAL";
+}
+} else {
+let deviasi = Math.abs((nilaiBaseline - amp) / nilaiBaseline) * 100;
+deviasiTeks = deviasi.toFixed(0) + "%";
+elDeviasi.innerText = deviasiTeks;
+if (deviasi > 10) {
+kondisiText = "BAHAYA";
+elStatus.innerText = "BAHAYA";
+} else {
+kondisiText = "AMAN";
+elStatus.innerText = "AMAN / NORMAL";
+}
+}
+let barisBaru = targetTabel.insertRow(-1); 
+barisBaru.innerHTML = `
+<td>${nomorUrut++}</td>
+<td>${amp}</td>
+<td>${deviasiTeks}</td>
+<td>${waktuSekarang}</td>
+<td style="font-weight: bold; color: ${kondisiText === 'AMAN' ? '#2ecc71' : (kondisiText === 'BAHAYA' ? '#e74c3c' : '#7f8c8d')}">${kondisiText}</td>
+`;
+grafikSaya.data.labels.push(waktuSekarang);
+grafikSaya.data.datasets[0].data.push(amp);
+if (grafikSaya.data.labels.length > 10) {
+grafikSaya.data.labels.shift();
+grafikSaya.data.datasets[0].data.shift();
+}
+grafikSaya.update();
+if (baselineSudahTerkunci == true) {
+let angkaDeviasi = parseFloat(deviasiTeks);
+if (!isNaN(angkaDeviasi)) {
+grafikDeviasi.data.labels.push(waktuSekarang);
+grafikDeviasi.data.datasets[0].data.push(angkaDeviasi);
+if (grafikDeviasi.data.labels.length > 10) {
+grafikDeviasi.data.labels.shift();
+grafikDeviasi.data.datasets[0].data.shift();
+}
+grafikDeviasi.update();
+}
+}
+}
+function logout() {
+window.location.href = "index.html";
+}
+hubungkanKeFirebase("R01");
 </script>
 </body>
 </html>

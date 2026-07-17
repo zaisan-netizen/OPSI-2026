@@ -1,10 +1,10 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>index-perfusion-monitor</title>
-
 <style>
-
 .background {
 background-image: url('background.jpg');
 background-size: 100% 100%;
@@ -17,8 +17,8 @@ display: flex;
 flex-direction: column;
 justify-content: center;
 align-items: center;
+font-family: 'Arial', sans-serif;
 }
-
 .tombol-pasien {
 font-family: 'arial', sans-serif;
 width: 300px;
@@ -34,12 +34,6 @@ box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 text-align: center;
 margin-bottom: 20px;
 }
-
-.tombol-pasien a {
-color: white;
-text-decoration: none;
-}
-
 .tombol-tenagamedis {
 font-family: 'arial', sans-serif;
 width: 300px;
@@ -55,33 +49,182 @@ box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 text-align: center;
 margin-bottom: 20px;
 }
-
-.tombol-tenagamedis a {
-color: white;
-text-decoration: none;
+.box-form {
+background: white;
+padding: 30px;
+border-radius: 20px;
+box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+width: 300px;
+box-sizing: border-box;
 }
-
-
+.box-form h2 {
+font-size: 22px;
+color: #2c3e50;
+margin-top: 0;
+margin-bottom: 20px;
+text-align: center;
+}
+.box-form label {
+font-size: 14px;
+color: #7f8c8d;
+font-weight: bold;
+display: block;
+margin-top: 10px;
+}
+.box-form input, .box-form select {
+width: 100%;
+padding: 10px;
+margin-top: 5px;
+margin-bottom: 15px;
+border: 1px solid #bdc3c7;
+border-radius: 8px;
+box-sizing: border-box;
+font-size: 14px;
+}
+.btn-submit {
+width: 100%;
+padding: 12px;
+background-color: #2ecc71;
+color: white;
+font-weight: bold;
+border: none;
+border-radius: 25px;
+cursor: pointer;
+font-size: 16px;
+margin-bottom: 10px;
+}
+.btn-batal {
+width: 100%;
+padding: 12px;
+background-color: #95a5a6;
+color: white;
+font-weight: bold;
+border: none;
+border-radius: 25px;
+cursor: pointer;
+font-size: 16px;
+}
+@media screen and (max-width: 1024px) {
+.background {
+height: auto !important;
+min-height: 100vh;
+padding: 20px 5% !important;
+overflow-x: hidden;
+}
+div[style*="display: flex; gap: 20px"] {
+flex-wrap: wrap !important;
+}
+div[style*="flex: 1;"] {
+flex: 1 1 100% !important;
+}
+.status-badge, .tombol-pasien, .tombol-tenagamedis, .box-form, select.pilih-relawan {
+width: 100% !important;
+max-width: 350px !important;
+}
+p {
+width: 100% !important;
+font-size: 22px !important;
+}
+table {
+display: block !important;
+overflow-x: auto !important;
+white-space: nowrap !important;
+width: 100% !important;
+}
+.tombol-kembali, .btn-keluar {
+position: relative;
+top: 0;
+left: 0;
+margin-top: 10px;
+margin-bottom: 20px;
+align-self: center;
+}
+}
 </style>
-
 </head>
-
 <body>
-
 <div class="background">
-
+<div id="menuUtama" style="display: flex; flex-direction: column; align-items: center;">
 <div class="tombol-1">
-<button class="tombol-pasien">
-<a href="pasien.html">Log In As A<br>Patient</a>
-</button>
+<button class="tombol-pasien" onclick="bukaForm('pasien')">Log In As A<br>Patient</button>
 </div>
-
 <div class="tombol-2">
-<button class="tombol-tenagamedis">
-<a href="medis.html">Log In As A<br>Healthcare Worker</a>
-</button>
+<button class="tombol-tenagamedis" onclick="bukaForm('medis')">Log In As A<br>Healthcare Worker</button>
 </div>
-
 </div>
+<div class="box-form" id="formPasien" style="display: none;">
+<h2>Patient Identity</h2>
+<label>Select Relawan ID:</label>
+<select id="idPasien">
+<option value="R01">R01 (Relawan 1)</option>
+<option value="R02">R02 (Relawan 2)</option>
+<option value="R03">R03 (Relawan 3)</option>
+<option value="R04">R04 (Relawan 4)</option>
+<option value="R05">R05 (Relawan 5)</option>
+<option value="R06">R06 (Relawan 6)</option>
+<option value="R07">R07 (Relawan 7)</option>
+<option value="R08">R08 (Relawan 8)</option>
+<option value="R09">R09 (Relawan 9)</option>
+<option value="R10">R10 (Relawan 10)</option>
+<option value="R11">R11 (Relawan 11)</option>
+<option value="R12">R12 (Relawan 12)</option>
+<option value="R13">R13 (Relawan 13)</option>
+<option value="R14">R14 (Relawan 14)</option>
+<option value="R15">R15 (Relawan 15)</option>
+<option value="R16">R16 (Relawan 16)</option>
+<option value="R17">R17 (Relawan 17)</option>
+<option value="R18">R18 (Relawan 18)</option>
+<option value="R19">R19 (Relawan 19)</option>
+<option value="R20">R20 (Relawan 20)</option>
+</select>
+<label>Enter 4-Digit PIN Access:</label>
+<input type="password" id="pinPasien" placeholder="••••" maxlength="4">
+<button class="btn-submit" onclick="prosesPasien()">SUBMIT</button>
+<button class="btn-batal" onclick="kembali()">CANCEL</button>
+</div>
+<div class="box-form" id="formMedis" style="display: none;">
+<h2>Healthcare Login</h2>
+<label>Password:</label>
+<input type="password" id="passwordMedis" placeholder="••••••••">
+<button class="btn-submit" onclick="prosesMedis()">LOGIN</button>
+<button class="btn-batal" onclick="kembali()">CANCEL</button>
+</div>
+</div>
+<script>
+function bukaForm(tipe) {
+document.getElementById('menuUtama').style.display = 'none';
+if(tipe === 'pasien') {
+document.getElementById('formPasien').style.display = 'block';
+} else if(tipe === 'medis') {
+document.getElementById('formMedis').style.display = 'block';
+}
+}
+function kembali() {
+document.getElementById('formPasien').style.display = 'none';
+document.getElementById('formMedis').style.display = 'none';
+document.getElementById('menuUtama').style.display = 'flex';
+}
+function prosesPasien() {
+let id = document.getElementById('idPasien').value;
+let pinInput = document.getElementById('pinPasien').value;
+let nomorId = id.replace("R", "");
+let pinBenar = "20" + nomorId;
+if(pinInput !== pinBenar) {
+alert("Invalid PIN Access for this Relawan ID!");
+return;
+}
+window.location.href = "pasien.html?id=" + id;
+}
+function prosesMedis() {
+let inputPw = document.getElementById('passwordMedis').value;
+let passwordKunci = "sekannimda";
+let inputDibalik = inputPw.split("").reverse().join("");
+if(inputDibalik === passwordKunci) {
+window.location.href = "medis.html";
+} else {
+alert("Wrong password! Access denied.");
+}
+}
+</script>
 </body>
 </html>
