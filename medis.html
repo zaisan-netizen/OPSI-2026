@@ -19,6 +19,12 @@ flex-direction: column;
 padding-left: 40px;
 padding-right: 40px;
 box-sizing: border-box;
+background-image: url('background.jpg?v=1') !important;
+background-size: cover !important;
+background-attachment: fixed !important;
+height: auto !important;
+min-height: 100vh !important;
+padding-bottom: 50px !important;
 }
 h1, h2, h3, h4 {
 font-size: 24px;
@@ -62,22 +68,24 @@ z-index: 10;
 color: white;
 text-decoration: none;
 }
+div[style*="display: flex; gap: 20px"] > div {
+height: 340px !important;
+min-width: 0 !important;
+}
 @media screen and (max-width: 1024px) {
 .background {
-height: auto !important;
-min-height: 100vh;
-padding: 20px 5% !important;
-overflow-x: hidden;
+padding-left: 20px !important;
+padding-right: 20px !important;
 }
 div[style*="display: flex; gap: 20px"] {
+flex-direction: column !important;
 flex-wrap: wrap !important;
+}
+div[style*="display: flex; gap: 20px"] > div {
+height: 280px !important;
 }
 div[style*="flex: 1;"] {
 flex: 1 1 100% !important;
-}
-.status-badge, .tombol-pasien, .tombol-tenagamedis, .box-form, select.pilih-relawan {
-width: 100% !important;
-max-width: 350px !important;
 }
 p {
 width: 100% !important;
@@ -98,49 +106,12 @@ margin-bottom: 20px;
 align-self: center;
 }
 }
-
-/* ==========================================================================
-   KODE TAMBAHAN OTOMATIS AGAR TIDAK BERANTAKAN DI PERANGKAT LAIN 
-   (Tanpa mengubah atau menghapus kode asli Anda di atas)
-   ========================================================================== */
-
-/* 1. Perbaikan Kunci Latar Belakang & Tinggi Dinamis pada Laptop/Desktop */
-.background {
-  background-image: url('background.jpg?v=1') !important; /* Cache busting gambar */
-  background-size: cover !important;                     /* Gambar proporsional tidak gepeng */
-  background-attachment: fixed !important;               /* Dikunci agar tidak nge-zoom saat di-scroll */
-  height: auto !important;                               /* Mengikuti panjang data tabel */
-  min-height: 100vh !important;
-  padding-bottom: 50px !important;                       /* Jarak aman di bagian bawah */
-}
-
-/* 2. Menstabilkan Grafik Agar Tidak Merosot ke Bawah */
-div[style*="display: flex; gap: 20px"] > div {
-  height: 340px !important;  /* Mengunci tinggi kotak putih pembungkus grafik */
-  min-width: 0 !important;   /* Mencegah konflik flexbox yang merusak aspek rasio grafik */
-}
-
-/* 3. Penyesuaian Responsif Tambahan Khusus Layar HP/Tablet */
-@media screen and (max-width: 1024px) {
-  .background {
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-  }
-  /* Mengubah layout kotak grafik menjadi atas-bawah saat dibuka di HP */
-  div[style*="display: flex; gap: 20px"] {
-    flex-direction: column !important;
-  }
-  div[style*="display: flex; gap: 20px"] > div {
-    height: 280px !important; /* Sesuaikan tinggi grafik agar pas di layar HP */
-  }
-}
 </style>
 </head>
 <body>
 <div class="background">
 <button class="tombol-kembali" onclick="logout()">KEMBALI</button>
 <h1>DASHBOARD HEALTHCARE WORKER</h1>
-<h2>ID ANDA : <span id="identitasRelawan">-</span></h2>
 <h2>BASELINE : <span id="medisBaseline">-</span></h2>
 <h3>STATUS : <span id="medisStatus">KALIBRASI</span></h3>
 <h4>DEVIASI : <span id="medisDeviasi">0%</span></h4>
@@ -180,12 +151,6 @@ let kumpulanData = [];
 let nilaiBaseline = 0;
 let baselineSudahTerkunci = false;
 let nomorUrut = 1;
-const urlParams = new URLSearchParams(window.location.search);
-let idRelawan = urlParams.get('id');
-if (!idRelawan) {
-idRelawan = "R01";
-}
-document.getElementById('identitasRelawan').innerText = idRelawan;
 const ctxAmp = document.getElementById('grafikMedis').getContext('2d');
 const grafikSaya = new Chart(ctxAmp, {
 type: 'line',
@@ -218,45 +183,15 @@ tension: 0.3
 },
 options: { scales: { y: { beginAtZero: true } } }
 });
-function resetTampilan() {
-kumpulanData = [];
-nilaiBaseline = 0;
-baselineSudahTerkunci = false;
-nomorUrut = 1;
-document.getElementById("medisBaseline").innerText = "-";
-document.getElementById("medisStatus").innerText = "KALIBRASI";
-document.getElementById("medisDeviasi").innerText = "0%";
-document.getElementById("TabelData").innerHTML = "";
-grafikSaya.data.labels = [];
-grafikSaya.data.datasets[0].data = [];
-grafikSaya.update();
-grafikDeviasi.data.labels = [];
-grafikDeviasi.data.datasets[0].data = [];
-grafikDeviasi.update();
-}
-let listenerAktif = null;
-function hubungkanKeFirebase(idRelawan) {
-if (listenerAktif) {
-database.ref('relawan/' + listenerAktif + '/amplitudo_sensor').off();
-}
-listenerAktif = idRelawan;
-document.getElementById('identitasRelawan').innerText = idRelawan;
-database.ref('relawan/' + idRelawan + '/amplitudo_sensor').on('value', (snapshot) => {
+database.ref('sensor').orderByKey().limitToLast(1).on('child_added', (snapshot) => {
 let dataMasuk = snapshot.val();
-console.log("Data " + idRelawan + ": ", dataMasuk);
-if (dataMasuk !== null && dataMasuk !== "") {
-let amplitudoBaru = parseFloat(dataMasuk);
+if (dataMasuk !== null && dataMasuk.beat !== undefined) {
+let amplitudoBaru = parseFloat(dataMasuk.beat);
 if (!isNaN(amplitudoBaru)) {
 prosesDataMedis(amplitudoBaru);
 }
 }
 });
-}
-function gantiPantauanRelawan() {
-let idTerpilih = document.getElementById("pilihRelawanMedis").value;
-resetTampilan();
-hubungkanKeFirebase(idTerpilih);
-}
 function prosesDataMedis(amp) {
 let elBaseline = document.getElementById("medisBaseline");
 let elStatus = document.getElementById("medisStatus");
@@ -320,7 +255,6 @@ grafikDeviasi.update();
 function logout() {
 window.location.href = "index.html";
 }
-hubungkanKeFirebase("R01");
 </script>
 </body>
 </html>

@@ -6,7 +6,6 @@
 <title>pasien-perfusion-monitor</title>
 <style>
 .background {
-/* SOLUSI: Menggunakan cover & cache busting agar background langsung rapi dan tidak gepeng */
 background-image: url('background.jpg?v=1');
 background-size: cover;
 background-repeat: no-repeat;
@@ -21,7 +20,6 @@ align-items: center;
 padding: 20px;
 box-sizing: border-box;
 }
-
 .tombol-kembali {
 position: absolute;
 top: 20px;
@@ -36,16 +34,14 @@ font-size: 14px;
 font-weight: bold;
 z-index: 10;
 }
-
 .tombol-kembali a {
 color: white;
 text-decoration: none;
 }
-
 .status-badge {
 font-family: 'Arial', sans-serif;
 width: 100%;
-max-width: 380px; /* Otomatis mengecil proporsional di HP */
+max-width: 380px;
 padding: 25px 0;
 border-radius: 50px;
 color: white;
@@ -55,12 +51,9 @@ border: none;
 text-align: center;
 box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
-
 .bg-warning { background-color: #f39c12; }
 .bg-normal { background-color: #21bfa2; }
 .bg-danger { background-color: #e74c3c; }
-
-/* --- RESPONSIVITAS ELEMEN PADA LAYAR HP --- */
 @media screen and (max-width: 1024px) {
 .background {
 height: auto !important;
@@ -74,11 +67,10 @@ flex-wrap: wrap !important;
 div[style*="flex: 1;"] {
 flex: 1 1 100% !important;
 }
-/* Memastikan badge status dan teks teks deviasi mengecil otomatis */
 .status-badge {
 width: 100% !important;
 max-width: 350px !important;
-font-size: 24px !important; /* Font badge mengecil di layar kecil agar teks tidak tumpah */
+font-size: 24px !important;
 }
 p {
 width: 100% !important;
@@ -91,7 +83,6 @@ overflow-x: auto !important;
 white-space: nowrap !important;
 width: 100% !important;
 }
-/* Posisi tombol kembali menjadi fleksibel di atas saat di HP */
 .tombol-kembali, .btn-keluar {
 position: relative !important;
 top: 0 !important;
@@ -106,16 +97,13 @@ align-self: center;
 <body>
 <div class="background">
 <button class="tombol-kembali" onclick="logout()">KEMBALI</button>
-<h2 style="color: black; font-family: Arial; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px;">ID ANDA: <span id="identitasRelawan">-</span></h2>
 <button id="kotak-status" class="status-badge bg-warning">
 Menentukan Baseline...
 </button>
-<!-- Mengubah width statis menjadi max-width agar responsif -->
 <p style="color: black; font-family: Arial; margin-top: 20px; font-size: 30px; font-weight: bold; text-align: center; width: 100%; max-width: 380px;">
 Deviasi: <span id="angkaDeviasi">0%</span>
 </p>
 </div>
-
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
@@ -127,24 +115,15 @@ const database = firebase.database();
 let kumpulanData = []; 
 let nilaiBaseline = 0;
 let Baselineditentukan = false;
-
-const urlParams = new URLSearchParams(window.location.search);
-let idRelawan = urlParams.get('id');
-if (!idRelawan) {
-idRelawan = "R01";
-}
-document.getElementById('identitasRelawan').innerText = idRelawan;
-
-database.ref('relawan/' + idRelawan + '/amplitudo_sensor').on('value', (snapshot) => {
-let dataMasuk = snapshot.val();
-if (dataMasuk !== null && dataMasuk !== "") {
-let amplitudoBaru = parseFloat(dataMasuk);
+database.ref('sensor').orderByKey().limitToLast(1).on('child_added', (snapshot) => {
+let dataMasuk = snapshot.val();  
+if (dataMasuk !== null && dataMasuk.beat !== undefined) {
+let amplitudoBaru = parseFloat(dataMasuk.beat);
 if (!isNaN(amplitudoBaru)) {
 terimaDataESP(amplitudoBaru);
 }
 }
 });
-
 function terimaDataESP(amplitudoBaru) {
 let elemenTombol = document.getElementById("kotak-status");
 let elemenTeksDeviasi = document.getElementById("angkaDeviasi");
@@ -172,7 +151,6 @@ elemenTombol.className = "status-badge bg-normal";
 }
 }
 }
-
 function logout() {
 window.location.href = "index.html";
 }
