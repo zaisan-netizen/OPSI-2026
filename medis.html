@@ -113,7 +113,6 @@ align-self: center;
 <button class="tombol-kembali" onclick="logout()">KEMBALI</button>
 <h1>DASHBOARD HEALTHCARE WORKER</h1>
 <h2>BASELINE : <span id="medisBaseline">-</span></h2>
-<h3>STATUS : <span id="medisStatus">KALIBRASI</span></h3>
 <h4>DEVIASI : <span id="medisDeviasi">0%</span></h4>
 <table>
 <thead>
@@ -122,7 +121,6 @@ align-self: center;
 <th>AMPLITUDO / 5 S</th>
 <th>DEVIASI</th>
 <th>TIMESTAMP</th>
-<th>KONDISI</th>
 </tr>
 </thead>
 <tbody id="TabelData">
@@ -194,12 +192,10 @@ prosesDataMedis(amplitudoBaru);
 });
 function prosesDataMedis(amp) {
 let elBaseline = document.getElementById("medisBaseline");
-let elStatus = document.getElementById("medisStatus");
 let elDeviasi = document.getElementById("medisDeviasi");
 let targetTabel = document.getElementById("TabelData");
 let waktuSekarang = new Date().toLocaleTimeString();
 let deviasiTeks = "-";
-let kondisiText = "KALIBRASI";
 if (baselineSudahTerkunci == false) {
 kumpulanData.push(amp);
 if (kumpulanData.length >= 5) {
@@ -210,19 +206,11 @@ total += kumpulanData[i];
 nilaiBaseline = total / kumpulanData.length;
 baselineSudahTerkunci = true;
 elBaseline.innerText = nilaiBaseline.toFixed(2);
-elStatus.innerText = "AMAN / NORMAL";
 }
 } else {
 let deviasi = Math.abs((nilaiBaseline - amp) / nilaiBaseline) * 100;
 deviasiTeks = deviasi.toFixed(0) + "%";
 elDeviasi.innerText = deviasiTeks;
-if (deviasi > 10) {
-kondisiText = "BAHAYA";
-elStatus.innerText = "BAHAYA";
-} else {
-kondisiText = "AMAN";
-elStatus.innerText = "AMAN / NORMAL";
-}
 }
 let barisBaru = targetTabel.insertRow(-1); 
 barisBaru.innerHTML = `
@@ -230,7 +218,6 @@ barisBaru.innerHTML = `
 <td>${amp}</td>
 <td>${deviasiTeks}</td>
 <td>${waktuSekarang}</td>
-<td style="font-weight: bold; color: ${kondisiText === 'AMAN' ? '#2ecc71' : (kondisiText === 'BAHAYA' ? '#e74c3c' : '#7f8c8d')}">${kondisiText}</td>
 `;
 grafikSaya.data.labels.push(waktuSekarang);
 grafikSaya.data.datasets[0].data.push(amp);
