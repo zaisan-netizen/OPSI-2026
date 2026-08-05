@@ -64,7 +64,21 @@ font-size: 14px;
 font-weight: bold;
 z-index: 10;
 }
-.tombol-kembali a {
+.tombol-reset {
+position: absolute;
+top: 20px;
+right: 150px;
+background-color: #e74c3c;
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 4px;
+cursor: pointer;
+font-size: 14px;
+font-weight: bold;
+z-index: 10;
+}
+.tombol-kembali a, .tombol-reset a {
 color: white;
 text-decoration: none;
 }
@@ -97,12 +111,13 @@ overflow-x: auto !important;
 white-space: nowrap !important;
 width: 100% !important;
 }
-.tombol-kembali, .btn-keluar {
+.tombol-kembali, .tombol-reset, .btn-keluar {
 position: relative;
 top: 0;
 left: 0;
+right: 0;
 margin-top: 10px;
-margin-bottom: 20px;
+margin-bottom: 5px;
 align-self: center;
 }
 }
@@ -111,6 +126,7 @@ align-self: center;
 <body>
 <div class="background">
 <button class="tombol-kembali" onclick="logout()">KEMBALI</button>
+<button class="tombol-reset" onclick="resetFirebase()">RESET DATA</button>
 <h1>DASHBOARD HEALTHCARE WORKER</h1>
 <h2>BASELINE : <span id="medisBaseline">-</span></h2>
 <h4>DEVIASI : <span id="medisDeviasi">0%</span></h4>
@@ -237,6 +253,24 @@ grafikDeviasi.data.datasets[0].data.shift();
 }
 grafikDeviasi.update();
 }
+}
+}
+function resetFirebase() {
+if (confirm("Apakah Anda yakin ingin menghapus data lama dan memulai ulang?")) {
+database.ref('sensor').remove();
+kumpulanData = [];
+nilaiBaseline = 0;
+baselineSudahTerkunci = false;
+nomorUrut = 1;
+document.getElementById("medisBaseline").innerText = "-";
+document.getElementById("medisDeviasi").innerText = "0%";
+document.getElementById("TabelData").innerHTML = "";
+grafikSaya.data.labels = [];
+grafikSaya.data.datasets[0].data = [];
+grafikSaya.update();
+grafikDeviasi.data.labels = [];
+grafikDeviasi.data.datasets[0].data = [];
+grafikDeviasi.update();
 }
 }
 function logout() {
