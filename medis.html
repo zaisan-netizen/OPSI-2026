@@ -161,9 +161,6 @@ databaseURL: "https://opsi-2026-30956-default-rtdb.asia-southeast1.firebasedatab
 };
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
-let kumpulanData = [];
-let nilaiBaseline = 0;
-let baselineSudahTerkunci = false;
 let nomorUrut = 1;
 const ctxAmp = document.getElementById('grafikMedis').getContext('2d');
 const grafikSaya = new Chart(ctxAmp, {
@@ -201,31 +198,24 @@ database.ref('sensor').orderByKey().limitToLast(1).on('child_added', (snapshot) 
 let dataMasuk = snapshot.val();
 if (dataMasuk !== null && dataMasuk.beat !== undefined) {
 let amplitudoBaru = parseFloat(dataMasuk.beat);
-if (!isNaN(amplitudoBaru)) {
-prosesDataMedis(amplitudoBaru);
-}
+let deviasiBaru = parseFloat(dataMasuk.deviasi);
+let baselineBaru = parseFloat(dataMasuk.baseline);
+prosesDataMedis(amplitudoBaru, deviasiBaru, baselineBaru);
 }
 });
-function prosesDataMedis(amp) {
+function prosesDataMedis(amp, dev, base) {
 let elBaseline = document.getElementById("medisBaseline");
 let elDeviasi = document.getElementById("medisDeviasi");
 let targetTabel = document.getElementById("TabelData");
 let waktuSekarang = new Date().toLocaleTimeString();
 let deviasiTeks = "-";
-if (baselineSudahTerkunci == false) {
-kumpulanData.push(amp);
-if (kumpulanData.length >= 12) {
-let total = 0;
-for(let i = 0; i < kumpulanData.length; i++) {
-total += kumpulanData[i];
-}
-nilaiBaseline = total / kumpulanData.length;
-baselineSudahTerkunci = true;
-elBaseline.innerText = nilaiBaseline.toFixed(2);
-}
+if (base === 0) {
+elBaseline.innerText = "-";
+deviasiTeks = "-";
+elDeviasi.innerText = "0%";
 } else {
-let deviasi = Math.abs((nilaiBaseline - amp) / nilaiBaseline) * 100;
-deviasiTeks = deviasi.toFixed(0) + "%";
+elBaseline.innerText = base.toFixed(2);
+deviasiTeks = dev.toFixed(1) + "%";
 elDeviasi.innerText = deviasiTeks;
 }
 let barisBaru = targetTabel.insertRow(-1); 
@@ -242,11 +232,9 @@ grafikSaya.data.labels.shift();
 grafikSaya.data.datasets[0].data.shift();
 }
 grafikSaya.update();
-if (baselineSudahTerkunci == true) {
-let angkaDeviasi = parseFloat(deviasiTeks);
-if (!isNaN(angkaDeviasi)) {
+if (base > 0) {
 grafikDeviasi.data.labels.push(waktuSekarang);
-grafikDeviasi.data.datasets[0].data.push(angkaDeviasi);
+grafikDeviasi.data.datasets[0].data.push(dev);
 if (grafikDeviasi.data.labels.length > 10) {
 grafikDeviasi.data.labels.shift();
 grafikDeviasi.data.datasets[0].data.shift();
@@ -254,13 +242,9 @@ grafikDeviasi.data.datasets[0].data.shift();
 grafikDeviasi.update();
 }
 }
-}
 function resetFirebase() {
 if (confirm("Apakah Anda yakin ingin menghapus data lama dan memulai ulang?")) {
 database.ref('sensor').remove();
-kumpulanData = [];
-nilaiBaseline = 0;
-baselineSudahTerkunci = false;
 nomorUrut = 1;
 document.getElementById("medisBaseline").innerText = "-";
 document.getElementById("medisDeviasi").innerText = "0%";
