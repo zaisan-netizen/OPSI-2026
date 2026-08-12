@@ -162,6 +162,9 @@ databaseURL: "https://opsi-2026-30956-default-rtdb.asia-southeast1.firebasedatab
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 let nomorUrut = 1;
+let peringatanTerkirim = false;
+let telegramBotToken = "8693745960:AAHv0TF-i9J3dfBuK1BQuksfklxluVTLSVY";
+let telegramChatId = "563582688";
 const ctxAmp = document.getElementById('grafikMedis').getContext('2d');
 const grafikSaya = new Chart(ctxAmp, {
 type: 'line',
@@ -203,6 +206,15 @@ let baselineBaru = parseFloat(dataMasuk.baseline);
 prosesDataMedis(amplitudoBaru, deviasiBaru, baselineBaru);
 }
 });
+function kirimTelegram(deviasi) {
+let pesan = "PERINGATAN MEDIS! %0A%0APasien mengalami deviasi perfusi tinggi mencapai " + deviasi + "%25. Segera lakukan pengecekan!";
+let url = "https://api.telegram.org/bot" + telegramBotToken + "/sendMessage?chat_id=" + telegramChatId + "&text=" + pesan;
+fetch(url).then(response => {
+console.log("Pesan Telegram terkirim!");
+}).catch(error => {
+console.error("Gagal kirim Telegram");
+});
+}
 function prosesDataMedis(amp, dev, base) {
 let elBaseline = document.getElementById("medisBaseline");
 let elDeviasi = document.getElementById("medisDeviasi");
@@ -217,6 +229,14 @@ elDeviasi.innerText = "0%";
 elBaseline.innerText = base.toFixed(2);
 deviasiTeks = dev.toFixed(1) + "%";
 elDeviasi.innerText = deviasiTeks;
+if (Math.abs(dev) > 10) {
+if (peringatanTerkirim === false) {
+kirimTelegram(dev.toFixed(1));
+peringatanTerkirim = true;
+}
+} else {
+peringatanTerkirim = false;
+}
 }
 let barisBaru = targetTabel.insertRow(-1); 
 barisBaru.innerHTML = `
@@ -246,6 +266,7 @@ function resetFirebase() {
 if (confirm("Apakah Anda yakin ingin menghapus data lama dan memulai ulang?")) {
 database.ref('sensor').remove();
 nomorUrut = 1;
+peringatanTerkirim = false;
 document.getElementById("medisBaseline").innerText = "-";
 document.getElementById("medisDeviasi").innerText = "0%";
 document.getElementById("TabelData").innerHTML = "";
