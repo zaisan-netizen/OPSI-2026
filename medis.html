@@ -197,15 +197,25 @@ tension: 0.3
 },
 options: { scales: { y: { beginAtZero: true } } }
 });
-database.ref('sensor').orderByKey().limitToLast(1).on('child_added', (snapshot) => {
-let dataMasuk = snapshot.val();
-if (dataMasuk !== null && dataMasuk.beat !== undefined) {
+
+// Menggunakan event 'value' pada referensi 'sensor' agar langsung membaca data terbaru tanpa peduli struktur kuncinya
+database.ref('sensor').on('value', (snapshot) => {
+let dataSemua = snapshot.val();
+if (dataSemua !== null) {
+let keys = Object.keys(dataSemua);
+if (keys.length > 0) {
+let kunciTerakhir = keys[keys.length - 1];
+let dataMasuk = dataSemua[kunciTerakhir];
+if (dataMasuk !== null && typeof dataMasuk === 'object' && dataMasuk.beat !== undefined) {
 let amplitudoBaru = parseFloat(dataMasuk.beat);
 let deviasiBaru = parseFloat(dataMasuk.deviasi);
 let baselineBaru = parseFloat(dataMasuk.baseline);
 prosesDataMedis(amplitudoBaru, deviasiBaru, baselineBaru);
 }
+}
+}
 });
+
 function kirimTelegram(deviasi) {
 let pesan = "PERINGATAN MEDIS! %0A%0APasien mengalami deviasi perfusi tinggi mencapai " + deviasi + "%25. Segera lakukan pengecekan!";
 let url = "https://api.telegram.org/bot" + telegramBotToken + "/sendMessage?chat_id=" + telegramChatId + "&text=" + pesan;
@@ -215,13 +225,15 @@ console.log("Pesan Telegram terkirim!");
 console.error("Gagal kirim Telegram");
 });
 }
+
 function prosesDataMedis(amp, dev, base) {
 let elBaseline = document.getElementById("medisBaseline");
 let elDeviasi = document.getElementById("medisDeviasi");
 let targetTabel = document.getElementById("TabelData");
 let waktuSekarang = new Date().toLocaleTimeString();
 let deviasiTeks = "-";
-if (base === 0) {
+
+if (base === 0 || isNaN(base)) {
 elBaseline.innerText = "-";
 deviasiTeks = "-";
 elDeviasi.innerText = "0%";
@@ -238,6 +250,7 @@ peringatanTerkirim = true;
 peringatanTerkirim = false;
 }
 }
+
 let barisBaru = targetTabel.insertRow(-1); 
 barisBaru.innerHTML = `
 <td>${nomorUrut++}</td>
@@ -245,6 +258,7 @@ barisBaru.innerHTML = `
 <td>${deviasiTeks}</td>
 <td>${waktuSekarang}</td>
 `;
+
 grafikSaya.data.labels.push(waktuSekarang);
 grafikSaya.data.datasets[0].data.push(amp);
 if (grafikSaya.data.labels.length > 10) {
@@ -252,7 +266,8 @@ grafikSaya.data.labels.shift();
 grafikSaya.data.datasets[0].data.shift();
 }
 grafikSaya.update();
-if (base > 0) {
+
+if (base > 0 && !isNaN(dev)) {
 grafikDeviasi.data.labels.push(waktuSekarang);
 grafikDeviasi.data.datasets[0].data.push(dev);
 if (grafikDeviasi.data.labels.length > 10) {
@@ -262,6 +277,7 @@ grafikDeviasi.data.datasets[0].data.shift();
 grafikDeviasi.update();
 }
 }
+
 function resetFirebase() {
 if (confirm("Apakah Anda yakin ingin menghapus data lama dan memulai ulang?")) {
 database.ref('sensor').remove();
@@ -278,6 +294,7 @@ grafikDeviasi.data.datasets[0].data = [];
 grafikDeviasi.update();
 }
 }
+
 function logout() {
 window.location.href = "index.html";
 }
