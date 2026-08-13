@@ -206,7 +206,9 @@ if (dataMasuk && dataMasuk.beat !== undefined) {
 let amplitudoBaru = parseFloat(dataMasuk.beat);
 let deviasiBaru = parseFloat(dataMasuk.deviasi);
 let baselineBaru = parseFloat(dataMasuk.baseline);
-prosesDataMedis(amplitudoBaru, deviasiBaru, baselineBaru);
+let baseTeks = dataMasuk.baseStr !== undefined ? dataMasuk.baseStr : (baselineBaru > 0 ? baselineBaru : "KALIBRASI...");
+let devTeks = dataMasuk.devStr !== undefined ? dataMasuk.devStr : (baselineBaru > 0 ? deviasiBaru + "%" : "Menunggu...");
+prosesDataMedis(amplitudoBaru, deviasiBaru, baselineBaru, baseTeks, devTeks);
 }
 });
 
@@ -220,22 +222,16 @@ console.error("Gagal kirim Telegram");
 });
 }
 
-function prosesDataMedis(amp, dev, base) {
+function prosesDataMedis(amp, dev, base, baseTeks, devTeks) {
 let elBaseline = document.getElementById("medisBaseline");
 let elDeviasi = document.getElementById("medisDeviasi");
 let targetTabel = document.getElementById("TabelData");
 let waktuSekarang = new Date().toLocaleTimeString();
-let deviasiTeks = "-";
 
-if (base === 0 || isNaN(base)) {
-elBaseline.innerText = "-";
-deviasiTeks = "-";
-elDeviasi.innerText = "0%";
-} else {
-elBaseline.innerText = base.toFixed(2);
-deviasiTeks = dev.toFixed(1) + "%";
-elDeviasi.innerText = deviasiTeks;
-if (Math.abs(dev) > 10) {
+elBaseline.innerText = baseTeks;
+elDeviasi.innerText = devTeks;
+
+if (base > 0 && Math.abs(dev) > 10) {
 if (peringatanTerkirim === false) {
 kirimTelegram(dev.toFixed(1));
 peringatanTerkirim = true;
@@ -243,13 +239,12 @@ peringatanTerkirim = true;
 } else {
 peringatanTerkirim = false;
 }
-}
 
-let barisBaru = targetTabel.insertRow(-1); 
+let barisBaru = targetTabel.insertRow(-1);
 barisBaru.innerHTML = `
 <td>${nomorUrut++}</td>
 <td>${amp}</td>
-<td>${deviasiTeks}</td>
+<td>${devTeks}</td>
 <td>${waktuSekarang}</td>
 `;
 
@@ -261,7 +256,7 @@ grafikSaya.data.datasets[0].data.shift();
 }
 grafikSaya.update();
 
-if (base > 0 && !isNaN(dev)) {
+if (base > 0) {
 grafikDeviasi.data.labels.push(waktuSekarang);
 grafikDeviasi.data.datasets[0].data.push(dev);
 if (grafikDeviasi.data.labels.length > 10) {
