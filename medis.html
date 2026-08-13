@@ -200,22 +200,26 @@ tension: 0.3
 options: { scales: { y: { beginAtZero: true } } }
 });
 
-// Listener khusus untuk mendeteksi data masuk berapapun ID acak POST dari ESP32
-database.ref('sensor').on('value', (snapshot) => {
-let dataSemua = snapshot.val();
-if (dataSemua !== null) {
-let keys = Object.keys(dataSemua);
-if (keys.length > 0) {
-let kunciTerakhir = keys[keys.length - 1];
-let dataMasuk = dataSemua[kunciTerakhir];
-if (dataMasuk !== null && typeof dataMasuk === 'object' && dataMasuk.beat !== undefined) {
-let amplitudoBaru = parseFloat(dataMasuk.beat);
-let deviasiBaru = parseFloat(dataMasuk.deviasi);
-let baselineBaru = parseFloat(dataMasuk.baseline);
-prosesDataMedis(amplitudoBaru, deviasiBaru, baselineBaru);
-}
-}
-}
+let kunciTerakhirDiproses = null;
+
+// Listener Anti-Gagal: Hanya membaca data baru, kebal terhadap format acak dari ESP32
+database.ref('sensor').orderByKey().limitToLast(1).on('value', (snapshot) => {
+    snapshot.forEach((childSnapshot) => {
+        let kunci = childSnapshot.key;
+        let dataMasuk = childSnapshot.val();
+        
+        // Cek agar tidak memproses baris yang sama berkali-kali
+        if (kunci !== kunciTerakhirDiproses) {
+            kunciTerakhirDiproses = kunci;
+            
+            if (dataMasuk && dataMasuk.beat !== undefined) {
+                let amplitudoBaru = parseFloat(dataMasuk.beat);
+                let deviasiBaru = parseFloat(dataMasuk.deviasi);
+                let baselineBaru = parseFloat(dataMasuk.baseline);
+                prosesDataMedis(amplitudoBaru, deviasiBaru, baselineBaru);
+            }
+        }
+    });
 });
 
 function kirimTelegram(deviasi) {
@@ -285,6 +289,7 @@ if (confirm("Apakah Anda yakin ingin menghapus data lama dan memulai ulang?")) {
 database.ref('sensor').remove();
 nomorUrut = 1;
 peringatanTerkirim = false;
+kunciTerakhirDiproses = null;
 document.getElementById("medisBaseline").innerText = "-";
 document.getElementById("medisDeviasi").innerText = "0%";
 document.getElementById("TabelData").innerHTML = "";
