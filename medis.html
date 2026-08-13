@@ -200,26 +200,14 @@ tension: 0.3
 options: { scales: { y: { beginAtZero: true } } }
 });
 
-let kunciTerakhirDiproses = null;
-
-// Listener Anti-Gagal: Hanya membaca data baru, kebal terhadap format acak dari ESP32
-database.ref('sensor').orderByKey().limitToLast(1).on('value', (snapshot) => {
-    snapshot.forEach((childSnapshot) => {
-        let kunci = childSnapshot.key;
-        let dataMasuk = childSnapshot.val();
-        
-        // Cek agar tidak memproses baris yang sama berkali-kali
-        if (kunci !== kunciTerakhirDiproses) {
-            kunciTerakhirDiproses = kunci;
-            
-            if (dataMasuk && dataMasuk.beat !== undefined) {
-                let amplitudoBaru = parseFloat(dataMasuk.beat);
-                let deviasiBaru = parseFloat(dataMasuk.deviasi);
-                let baselineBaru = parseFloat(dataMasuk.baseline);
-                prosesDataMedis(amplitudoBaru, deviasiBaru, baselineBaru);
-            }
-        }
-    });
+database.ref('/sensor').limitToLast(1).on('child_added', (snapshot) => {
+const dataMasuk = snapshot.val();
+if (dataMasuk && dataMasuk.beat !== undefined) {
+let amplitudoBaru = parseFloat(dataMasuk.beat);
+let deviasiBaru = parseFloat(dataMasuk.deviasi);
+let baselineBaru = parseFloat(dataMasuk.baseline);
+prosesDataMedis(amplitudoBaru, deviasiBaru, baselineBaru);
+}
 });
 
 function kirimTelegram(deviasi) {
@@ -289,7 +277,6 @@ if (confirm("Apakah Anda yakin ingin menghapus data lama dan memulai ulang?")) {
 database.ref('sensor').remove();
 nomorUrut = 1;
 peringatanTerkirim = false;
-kunciTerakhirDiproses = null;
 document.getElementById("medisBaseline").innerText = "-";
 document.getElementById("medisDeviasi").innerText = "0%";
 document.getElementById("TabelData").innerHTML = "";
