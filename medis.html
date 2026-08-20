@@ -250,19 +250,11 @@ barisBaru.innerHTML = `
 
 grafikSaya.data.labels.push(waktuSekarang);
 grafikSaya.data.datasets[0].data.push(amp);
-if (grafikSaya.data.labels.length > 10) {
-grafikSaya.data.labels.shift();
-grafikSaya.data.datasets[0].data.shift();
-}
 grafikSaya.update();
 
 if (base > 0) {
 grafikDeviasi.data.labels.push(waktuSekarang);
 grafikDeviasi.data.datasets[0].data.push(dev);
-if (grafikDeviasi.data.labels.length > 10) {
-grafikDeviasi.data.labels.shift();
-grafikDeviasi.data.datasets[0].data.shift();
-}
 grafikDeviasi.update();
 }
 }
